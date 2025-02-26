@@ -100,7 +100,15 @@ sessionStorage.setItem("wordlist", JSON.stringify(testList));
                 <div class="frame-botton">
                     <div class="frame-botton2">
                         <div class="button button-tall" onclick="(()=>{window.location.assign('studentPractice.php')})()">
-                            <div class="submit">Start</div>
+                            <div class="submit">Audio Practice</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="frame-botton">
+                    <div class="frame-botton2">
+                        <div class="button button-tall" onclick="(()=>{window.location.assign('studentgradedPractice.php')})()">
+                            <div class="submit">Graded Practice</div>
                         </div>
                     </div>
                 </div>

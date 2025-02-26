@@ -1,25 +1,8 @@
 <?php require "_sessionHeader.php" ?>
 <?php
 require_once '_incFunctions.php';
-require 'vendor/autoload.php';
-
-use OpenAI\Client;
 
 $timeLimit = isset($_COOKIE['timeLimit']) ? sanitizeHTML($_COOKIE['timeLimit']) : 'default_value';
-
-function gradeAnswer($recognizedText, $correctAnswer) {
-    $client = new Client('YOUR_OPENAI_API_KEY');
-    $prompt = "Grade the recognized text based on tone. If the tone is not correct for one character, take off 0.2 of the 1 point. If both are wrong, the score is 0.6. If the word is completely wrong, it is 0 points. Return the recognized text, correct answer, and score.\n\nRecognized text: \"$recognizedText\"\nCorrect answer: \"$correctAnswer\"";
-
-    $response = $client->completions()->create([
-        'model' => 'text-davinci-003',
-        'prompt' => $prompt,
-        'max_tokens' => 50,
-    ]);
-
-    $result = $response['choices'][0]['text'];
-    return json_decode($result, true);
-}
 ?>
 
 <script>
@@ -72,11 +55,8 @@ function gradeAnswer($recognizedText, $correctAnswer) {
 
     recognition.onerror = event => {
         console.error('Error:', event);
-        if (event.error === 'aborted') {
-            console.log("Recognition aborted, restarting...");
-            setTimeout(startRecognition, 1000); // Retry after 1 second
-        } else if (event.error === 'no-speech') {
-            console.log("No speech detected, retrying...");
+        if (event.error === 'aborted' || event.error === 'no-speech') {
+            console.log("Recognition error, restarting...");
             setTimeout(startRecognition, 1000); // Retry after 1 second
         } else {
             console.error("Speech recognition error:", event.error);
@@ -92,6 +72,10 @@ function gradeAnswer($recognizedText, $correctAnswer) {
     function startRecognition() {
         console.log("Starting recognition...");
         let resultElement = document.getElementById('result');
+        if (!resultElement) {
+            console.error("Result element not found.");
+            return;
+        }
         resultElement.innerHTML = '<h2 class="form-title">Listening...</h2>'; // Show "Listening..." when recognition starts
         if (!isRecognizing) {
             try {
@@ -104,7 +88,7 @@ function gradeAnswer($recognizedText, $correctAnswer) {
         }
     }
 
-    async function checkAnswer(recognizedText) {
+    function checkAnswer(recognizedText) {
         console.log("checkAnswer called with:", recognizedText); // Debugging statement
         if (!testList || testList.length === 0) {
             console.error("testList is empty or not defined.");
@@ -113,40 +97,47 @@ function gradeAnswer($recognizedText, $correctAnswer) {
 
         let correctAnswer = testList[current].word;
         let resultElement = document.getElementById('result');
-        
-        console.log("Correct answer:", correctAnswer); // Debugging statement
-        console.log("Recognized text:", recognizedText); // Debugging statement
 
-        // Call the PHP function to grade the answer
-        let response = await fetch('gradeAnswer.php', {
+        // Call the grade_audio API
+        fetch('api/grade_audio.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ recognizedText, correctAnswer })
+            body: JSON.stringify({
+                recognizedText: recognizedText,
+                correctAnswer: correctAnswer
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error("Error from API:", data.error);
+                return;
+            }
+
+            let score = data.score;
+            console.log("Score from API:", score);
+
+            console.log("Updating result element..."); // Debugging statement
+            if (recognizedText.trim().startsWith(correctAnswer) || recognizedText.trim().endsWith(correctAnswer)) {
+                resultElement.innerHTML = '<h2 class="form-title" style="color: #18b740de;">Correct!</h2>';
+            } else {
+                resultElement.innerHTML = '<h2 class="form-title" style="color: #ba4040;">Incorrect!</h2>';
+            }
+            console.log("Updated result element:", resultElement.innerHTML); // Debugging statement
+
+            // Update the testList with the result
+            testList[current].result = score;
+            // Save the updated testList to session storage
+            sessionStorage.setItem("wordlist", JSON.stringify(testList));
+
+            // Move to the next item
+            nextItem(score > 0.5);
+        })
+        .catch(error => {
+            console.error("Error calling API:", error);
         });
-
-        let result = await response.json();
-        console.log("Grading result:", result); // Debugging statement
-
-        let score = result.score;
-        console.log("Score:", score); // Debugging statement
-
-        console.log("Updating result element..."); // Debugging statement
-        if (score === 1) {
-            resultElement.innerHTML = '<h2 class="form-title" style="color: #18b740de;">Correct!</h2>';
-        } else {
-            resultElement.innerHTML = `<h2 class="form-title" style="color: #ba4040;">Incorrect! Score: ${score}</h2>`;
-        }
-        console.log("Updated result element:", resultElement.innerHTML); // Debugging statement
-
-        // Update the testList with the result
-        testList[current].result = score;
-        // Save the updated testList to session storage
-        sessionStorage.setItem("wordlist", JSON.stringify(testList));
-
-        // Move to the next item
-        nextItem(score === 1);
     }
 
     function previousItem(){
@@ -174,7 +165,7 @@ function gradeAnswer($recognizedText, $correctAnswer) {
             }, function(response) {
                 console.log(response);
                 if(response.includes("OK!")){
-                    window.location.assign('endPractice.php');
+                    window.location.assign('endGraded.php');
                 } else {
                     alert(response);
                 }
@@ -186,7 +177,7 @@ function gradeAnswer($recognizedText, $correctAnswer) {
         if (testList && testList.length > 0) {
             document.getElementById("boxTestword").innerHTML = testList[current].word;
             document.getElementById("boxCounter").innerHTML = (current + 1) + "/" + (testList.length);
-            remain = <?php echo $timeLimit ?>;
+            remain = <?php echo json_encode($timeLimit); ?>;
             timeElapsed = 0;
             if(timer){
                 clearTimeout(timer);
@@ -241,7 +232,7 @@ function gradeAnswer($recognizedText, $correctAnswer) {
                 </div>
                 <div style="display: inline-block; vertical-align: top; margin-left: 15px;">
                     <button id="mic-btn">
-                        <img src="https://static.vecteezy.com/system/resources/previews/014/391/889/original/microphone-icon-on-transparent-background-microphone-icon-free-png.png" height="50px" width="80px" alt="Microphone">
+                        <img src="https://static.vecteezy.com/system/resources/previews/014/391/889/original/microphone-icon-on-transparent-background-microphone-icon-free-png.png" height="50px" width="50px" alt="Microphone">
                     </button>
                 </div>
             </div>
