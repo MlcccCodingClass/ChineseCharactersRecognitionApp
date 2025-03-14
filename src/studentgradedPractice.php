@@ -98,46 +98,58 @@ $timeLimit = isset($_COOKIE['timeLimit']) ? sanitizeHTML($_COOKIE['timeLimit']) 
         let correctAnswer = testList[current].word;
         let resultElement = document.getElementById('result');
 
-        // Call the grade_audio API
-        fetch('api/grade_audio.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                recognizedText: recognizedText,
-                correctAnswer: correctAnswer
+        // Check if the recognized text matches the correct answer
+        if (recognizedText.trim() === correctAnswer) {
+            resultElement.innerHTML = '<h2 class="form-title" style="color: #18b740de;">Correct!</h2>';
+            testList[current].result = 1; // Full score for correct answer
+            nextItem(true);
+        } else if (recognizedText.trim().startsWith(correctAnswer) || recognizedText.trim().endsWith(correctAnswer)) {
+            // If the pinyin matches but the tone is wrong, call the grade_audio API
+            fetch('api/grade_audio.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    recognizedText: recognizedText,
+                    correctAnswer: correctAnswer
+                })
             })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                console.error("Error from API:", data.error);
-                return;
-            }
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error("Error from API:", data.error);
+                    return;
+                }
 
-            let score = data.score;
-            console.log("Score from API:", score);
+                let score = data.score;
+                console.log("Score from API:", score);
 
-            console.log("Updating result element..."); // Debugging statement
-            if (recognizedText.trim().startsWith(correctAnswer) || recognizedText.trim().endsWith(correctAnswer)) {
-                resultElement.innerHTML = '<h2 class="form-title" style="color: #18b740de;">Correct!</h2>';
-            } else {
-                resultElement.innerHTML = '<h2 class="form-title" style="color: #ba4040;">Incorrect!</h2>';
-            }
-            console.log("Updated result element:", resultElement.innerHTML); // Debugging statement
+                console.log("Updating result element..."); // Debugging statement
+                if (score > 0.5) {
+                    resultElement.innerHTML = '<h2 class="form-title" style="color: #18b740de;">Correct!</h2>';
+                } else {
+                    resultElement.innerHTML = '<h2 class="form-title" style="color: #ba4040;">Incorrect!</h2>';
+                }
+                console.log("Updated result element:", resultElement.innerHTML); // Debugging statement
 
-            // Update the testList with the result
-            testList[current].result = score;
-            // Save the updated testList to session storage
-            sessionStorage.setItem("wordlist", JSON.stringify(testList));
+                // Update the testList with the result
+                testList[current].result = score;
+                // Save the updated testList to session storage
+                sessionStorage.setItem("wordlist", JSON.stringify(testList));
 
-            // Move to the next item
-            nextItem(score > 0.5);
-        })
-        .catch(error => {
-            console.error("Error calling API:", error);
-        });
+                // Move to the next item
+                nextItem(score > 0.5);
+            })
+            .catch(error => {
+                console.error("Error calling API:", error);
+            });
+        } else {
+            // If the word is completely wrong, grade it as incorrect
+            resultElement.innerHTML = '<h2 class="form-title" style="color: #ba4040;">Incorrect!</h2>';
+            testList[current].result = 0; // No score for incorrect answer
+            nextItem(false);
+        }
     }
 
     function previousItem(){
@@ -232,7 +244,7 @@ $timeLimit = isset($_COOKIE['timeLimit']) ? sanitizeHTML($_COOKIE['timeLimit']) 
                 </div>
                 <div style="display: inline-block; vertical-align: top; margin-left: 15px;">
                     <button id="mic-btn">
-                        <img src="https://static.vecteezy.com/system/resources/previews/014/391/889/original/microphone-icon-on-transparent-background-microphone-icon-free-png.png" height="50px" width="50px" alt="Microphone">
+                        <img src="https://static.vecteezy.com/system/resources/previews/014/391/889/original/microphone-icon-on-transparent-background-microphone-icon-free-png.png" height="50px" width="80px" alt="Microphone">
                     </button>
                 </div>
             </div>

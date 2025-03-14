@@ -29,7 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $sql = "INSERT INTO `records` (`ActivityID`, `WordID`, `Passed`, `TimeElapsed`) VALUES ";
         $sql .= implode(',', $DataArr);
         if (!$conn->query($sql)) {
-            die("Error inserting records: " . $conn->error);
+            die("Error inserting records: " . $conn->error." sql=" . $sql);
         }
 
         $sqlUpdateActivity = "UPDATE `activities` SET CompletedTime = CURRENT_TIMESTAMP, FinalScore = ?, TimeSpent = ? WHERE ActivityID = ?";
