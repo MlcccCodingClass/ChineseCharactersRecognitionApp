@@ -55,8 +55,10 @@ $timeLimit = isset($_COOKIE['timeLimit']) ? sanitizeHTML($_COOKIE['timeLimit']) 
 
     recognition.onerror = event => {
         console.error('Error:', event);
+
         if (event.error === 'aborted' || event.error === 'no-speech') {
             console.log("Recognition error, restarting...");
+
             setTimeout(startRecognition, 1000); // Retry after 1 second
         } else {
             console.error("Speech recognition error:", event.error);
@@ -72,10 +74,12 @@ $timeLimit = isset($_COOKIE['timeLimit']) ? sanitizeHTML($_COOKIE['timeLimit']) 
     function startRecognition() {
         console.log("Starting recognition...");
         let resultElement = document.getElementById('result');
+
         if (!resultElement) {
             console.error("Result element not found.");
             return;
         }
+
         resultElement.innerHTML = '<h2 class="form-title">Listening...</h2>'; // Show "Listening..." when recognition starts
         if (!isRecognizing) {
             try {
@@ -94,6 +98,7 @@ $timeLimit = isset($_COOKIE['timeLimit']) ? sanitizeHTML($_COOKIE['timeLimit']) 
             console.error("testList is empty or not defined.");
             return;
         }
+
 
         let correctAnswer = testList[current].word;
         let resultElement = document.getElementById('result');
@@ -150,6 +155,7 @@ $timeLimit = isset($_COOKIE['timeLimit']) ? sanitizeHTML($_COOKIE['timeLimit']) 
             testList[current].result = 0; // No score for incorrect answer
             nextItem(false);
         }
+
     }
 
     function previousItem(){
@@ -177,7 +183,9 @@ $timeLimit = isset($_COOKIE['timeLimit']) ? sanitizeHTML($_COOKIE['timeLimit']) 
             }, function(response) {
                 console.log(response);
                 if(response.includes("OK!")){
+
                     window.location.assign('endGraded.php');
+
                 } else {
                     alert(response);
                 }
@@ -189,7 +197,9 @@ $timeLimit = isset($_COOKIE['timeLimit']) ? sanitizeHTML($_COOKIE['timeLimit']) 
         if (testList && testList.length > 0) {
             document.getElementById("boxTestword").innerHTML = testList[current].word;
             document.getElementById("boxCounter").innerHTML = (current + 1) + "/" + (testList.length);
+
             remain = <?php echo json_encode($timeLimit); ?>;
+
             timeElapsed = 0;
             if(timer){
                 clearTimeout(timer);
@@ -243,8 +253,10 @@ $timeLimit = isset($_COOKIE['timeLimit']) ? sanitizeHTML($_COOKIE['timeLimit']) 
                     <div class="time-block" id="boxTimer">[time]</div>
                 </div>
                 <div style="display: inline-block; vertical-align: top; margin-left: 15px;">
-                    <button id="mic-btn">
-                        <img src="https://static.vecteezy.com/system/resources/previews/014/391/889/original/microphone-icon-on-transparent-background-microphone-icon-free-png.png" height="50px" width="80px" alt="Microphone">
+
+                    <button id="mic-btn"  style="width: 80px;">
+                        <img src="https://static.vecteezy.com/system/resources/previews/014/391/889/original/microphone-icon-on-transparent-background-microphone-icon-free-png.png" height="80px" width="80px" alt="Microphone">
+
                     </button>
                 </div>
             </div>
