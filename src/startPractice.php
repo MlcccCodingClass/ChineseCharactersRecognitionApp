@@ -94,7 +94,13 @@ sessionStorage.setItem("wordlist", JSON.stringify(testList));
                 </div>
 
                 <div class="label"  style="margin-top:10px;;margin-bottom:10px;">
-                    For this practice test, students will read aloud each word. The Audio button is available in the top right for self-grading purposes.
+                    In the Audio Practice, students will read aloud each word. The audio button is available in the top right for self-grading purposes.
+                </div>
+
+                <div class="label"  style="margin-top:10px;;margin-bottom:10px;">
+                    In the Graded Practice, students will read aloud each word and the system will grade the recorded response based on correct pinyin and tone pronounciation.
+                    
+                    To ensure that the system is able to recognize the words, please say at least 2 words for each response. For example, if the word is "我", please say "我的" or "我是".
                 </div>
 
                 <div class="frame-botton">

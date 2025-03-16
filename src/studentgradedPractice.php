@@ -255,8 +255,8 @@ $timeLimit = isset($_COOKIE['timeLimit']) ? sanitizeHTML($_COOKIE['timeLimit']) 
                 </div>
                 <div style="display: inline-block; vertical-align: top; margin-left: 15px;">
 
-                    <button id="mic-btn"  style="width: 80px;">
-                        <img src="https://static.vecteezy.com/system/resources/previews/014/391/889/original/microphone-icon-on-transparent-background-microphone-icon-free-png.png" height="80px" width="80px" alt="Microphone">
+                    <button id="mic-btn">
+                        <img src="https://static.vecteezy.com/system/resources/previews/014/391/889/original/microphone-icon-on-transparent-background-microphone-icon-free-png.png" height="80px" width="100px" alt="Microphone">
 
                     </button>
                 </div>
