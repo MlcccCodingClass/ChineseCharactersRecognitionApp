@@ -104,7 +104,8 @@ $timeLimit = isset($_COOKIE['timeLimit']) ? sanitizeHTML($_COOKIE['timeLimit']) 
         let resultElement = document.getElementById('result');
 
         // Check if the recognized text matches the correct answer
-        if (recognizedText.trim() === correctAnswer) {
+        //if (recognizedText.trim() === correctAnswer) {
+        if (recognizedText.includes(correctAnswer)) {
             resultElement.innerHTML = '<h2 class="form-title" style="color: #18b740de;">Correct!</h2>';
             testList[current].result = 1; // Full score for correct answer
             nextItem(true);
