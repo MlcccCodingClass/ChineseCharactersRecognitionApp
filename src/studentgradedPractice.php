@@ -55,11 +55,10 @@ $timeLimit = isset($_COOKIE['timeLimit']) ? sanitizeHTML($_COOKIE['timeLimit']) 
 
     recognition.onerror = event => {
         console.error('Error:', event);
-        if (event.error === 'aborted') {
-            console.log("Recognition aborted, restarting...");
-            setTimeout(startRecognition, 1000); // Retry after 1 second
-        } else if (event.error === 'no-speech') {
-            console.log("No speech detected, retrying...");
+
+        if (event.error === 'aborted' || event.error === 'no-speech') {
+            console.log("Recognition error, restarting...");
+
             setTimeout(startRecognition, 1000); // Retry after 1 second
         } else {
             console.error("Speech recognition error:", event.error);
@@ -75,6 +74,12 @@ $timeLimit = isset($_COOKIE['timeLimit']) ? sanitizeHTML($_COOKIE['timeLimit']) 
     function startRecognition() {
         console.log("Starting recognition...");
         let resultElement = document.getElementById('result');
+
+        if (!resultElement) {
+            console.error("Result element not found.");
+            return;
+        }
+
         resultElement.innerHTML = '<h2 class="form-title">Listening...</h2>'; // Show "Listening..." when recognition starts
         if (!isRecognizing) {
             try {
@@ -94,30 +99,64 @@ $timeLimit = isset($_COOKIE['timeLimit']) ? sanitizeHTML($_COOKIE['timeLimit']) 
             return;
         }
 
-        let correctAnswer = testList[current].word.trim() ;
+
+        let correctAnswer = testList[current].word;
         let resultElement = document.getElementById('result');
-        let result = (recognizedText.trim().startsWith(correctAnswer) || recognizedText.trim().endsWith(correctAnswer)) ? 'correct' : 'incorrect';
-        
-        console.log("Correct answer:", correctAnswer); // Debugging statement
-        console.log("Recognized text:", recognizedText); // Debugging statement
-        console.log("Result:", result); // Debugging statement
 
-        console.log("Updating result element..."); // Debugging statement
-        if (result === 'correct') {
+        // Check if the recognized text matches the correct answer
+        //if (recognizedText.trim() === correctAnswer) {
+        if (recognizedText.includes(correctAnswer)) {
             resultElement.innerHTML = '<h2 class="form-title" style="color: #18b740de;">Correct!</h2>';
+            testList[current].result = 1; // Full score for correct answer
+            nextItem(true);
+        } else if (recognizedText.trim().startsWith(correctAnswer) || recognizedText.trim().endsWith(correctAnswer)) {
+            // If the pinyin matches but the tone is wrong, call the grade_audio API
+            fetch('api/grade_audio.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    recognizedText: recognizedText,
+                    correctAnswer: correctAnswer
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error("Error from API:", data.error);
+                    return;
+                }
+
+                let score = data.score;
+                console.log("Score from API:", score);
+
+                console.log("Updating result element..."); // Debugging statement
+                if (score > 0.5) {
+                    resultElement.innerHTML = '<h2 class="form-title" style="color: #18b740de;">Correct!</h2>';
+                } else {
+                    resultElement.innerHTML = '<h2 class="form-title" style="color: #ba4040;">Incorrect!</h2>';
+                }
+                console.log("Updated result element:", resultElement.innerHTML); // Debugging statement
+
+                // Update the testList with the result
+                testList[current].result = score;
+                // Save the updated testList to session storage
+                sessionStorage.setItem("wordlist", JSON.stringify(testList));
+
+                // Move to the next item
+                nextItem(score > 0.5);
+            })
+            .catch(error => {
+                console.error("Error calling API:", error);
+            });
         } else {
+            // If the word is completely wrong, grade it as incorrect
             resultElement.innerHTML = '<h2 class="form-title" style="color: #ba4040;">Incorrect!</h2>';
+            testList[current].result = 0; // No score for incorrect answer
+            nextItem(false);
         }
-        console.log("Updated result element:", resultElement.innerHTML); // Debugging statement
 
-        // Update the testList with the result
-        //testList[current].result = result;
-        testList[current].answer = recognizedText.trim();
-        // Save the updated testList to session storage
-        sessionStorage.setItem("wordlist", JSON.stringify(testList));
-
-        // Move to the next item
-        nextItem(result === 'correct');
     }
 
     function previousItem(){
@@ -145,7 +184,9 @@ $timeLimit = isset($_COOKIE['timeLimit']) ? sanitizeHTML($_COOKIE['timeLimit']) 
             }, function(response) {
                 console.log(response);
                 if(response.includes("OK!")){
-                    window.location.assign('endPractice.php');
+
+                    window.location.assign('endGraded.php');
+
                 } else {
                     alert(response);
                 }
@@ -157,7 +198,9 @@ $timeLimit = isset($_COOKIE['timeLimit']) ? sanitizeHTML($_COOKIE['timeLimit']) 
         if (testList && testList.length > 0) {
             document.getElementById("boxTestword").innerHTML = testList[current].word;
             document.getElementById("boxCounter").innerHTML = (current + 1) + "/" + (testList.length);
-            remain = <?php echo $timeLimit ?>;
+
+            remain = <?php echo json_encode($timeLimit); ?>;
+
             timeElapsed = 0;
             if(timer){
                 clearTimeout(timer);
@@ -211,8 +254,10 @@ $timeLimit = isset($_COOKIE['timeLimit']) ? sanitizeHTML($_COOKIE['timeLimit']) 
                     <div class="time-block" id="boxTimer">[time]</div>
                 </div>
                 <div style="display: inline-block; vertical-align: top; margin-left: 15px;">
-                    <button id="mic-btn" style="width: 80px;">
-                        <img src="https://static.vecteezy.com/system/resources/previews/014/391/889/original/microphone-icon-on-transparent-background-microphone-icon-free-png.png" height="50px" width="50px" alt="Microphone">
+
+                    <button id="mic-btn">
+                        <img src="https://static.vecteezy.com/system/resources/previews/014/391/889/original/microphone-icon-on-transparent-background-microphone-icon-free-png.png" height="80px" width="100px" alt="Microphone">
+
                     </button>
                 </div>
             </div>

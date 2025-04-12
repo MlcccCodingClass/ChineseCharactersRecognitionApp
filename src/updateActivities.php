@@ -8,47 +8,40 @@ $activityidFromSession = $_SESSION["activityid"];
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $resultlist = json_decode($_POST['data'], TRUE);
-    //echo $_POST['data'];
     $questionsCorrect = 0;
-    $totalTime=0;
-    //save to records table
+    $totalTime = 0;
     $DataArr = array();
+
     foreach($resultlist as $row){
         $WordID = $conn->real_escape_string($row['id']);
-        $Passed = $row['passed']? 1:0;
-        $TimeElapsed =$conn->real_escape_string($row['timeElapsed']);    
+        $Passed = $row['passed'] ? 1 : 0;
+        $TimeElapsed = $conn->real_escape_string($row['timeElapsed']);    
         $DataArr[] = "($activityidFromSession, $WordID, $Passed, $TimeElapsed)";
-        $totalTime+= (int)$TimeElapsed;
+        $totalTime += (int)$TimeElapsed;
 
         if($Passed == 1){
-            $questionsCorrect+=1;
+            $questionsCorrect += 1;
         }
     }
-    if(count($DataArr)>0) {
-    
+
+    if(count($DataArr) > 0) {
         $totalPercent = (int)round($questionsCorrect / count($DataArr) * 100);
-        $sql = "INSERT INTO `records` (`ActivityID`, `WordID`, `Passed`, `TimeElapsed`) VALUES  ";
+        $sql = "INSERT INTO `records` (`ActivityID`, `WordID`, `Passed`, `TimeElapsed`) VALUES ";
         $sql .= implode(',', $DataArr);
-        mysqli_query($conn, $sql); 
-
-        //update activity table
-        $sqlUpdateActivity = "UPDATE `activities` SET CompletedTime = CURRENT_TIMESTAMP, FinalScore = ?,TimeSpent = ? WHERE ActivityID = ? ";
-        if($stmt = $conn->prepare($sqlUpdateActivity)){
-            $stmt->bind_param("iii", $totalPercent,$totalTime, $activityidFromSession);
-            $stmt->execute();
-            echo "OK! totalPercent=".$totalPercent." , totalTime=".$totalTime;
-        }else{
-            die("Errormessage: ". $conn->error);
+        if (!$conn->query($sql)) {
+            die("Error inserting records: " . $conn->error." sql=" . $sql);
         }
-    
-   
-    }
-    
-    //header("Location: endTest.php");
 
-}else{
-    echo "Error: method no support";
+        $sqlUpdateActivity = "UPDATE `activities` SET CompletedTime = CURRENT_TIMESTAMP, FinalScore = ?, TimeSpent = ? WHERE ActivityID = ?";
+        if($stmt = $conn->prepare($sqlUpdateActivity)){
+            $stmt->bind_param("iii", $totalPercent, $totalTime, $activityidFromSession);
+            $stmt->execute();
+            echo "OK! totalPercent=" . $totalPercent . " , totalTime=" . $totalTime;
+        } else {
+            die("Error preparing statement: " . $conn->error);
+        }
+    }
+} else {
+    echo "Error: method not supported";
 }
 ?>
-
-

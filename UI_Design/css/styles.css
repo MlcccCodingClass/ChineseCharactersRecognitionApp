@@ -590,7 +590,15 @@ vertical-align: middle;
   color: #fff;
   border: none;
   padding: 10px 20px;
-  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+#micro-btn {
+  background-color: #ff9494;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
   cursor: pointer;
   transition: background-color 0.3s;
 }

@@ -45,6 +45,40 @@
                 <li><a href="adminWords.php">Words</a></li>
             </ul>
         </div>
+        <div style="text-align:right; margin: 10px 20px 0 0;">
+            <?php
+                // Timezone selection logic (shared with admin.php)
+                $allowedTimezones = ['UTC', 'America/New_York', 'America/Chicago', 'America/Los_Angeles'];
+                $selectedTz = 'UTC';
+                if (isset($_GET['tz']) && in_array($_GET['tz'], $allowedTimezones)) {
+                    $selectedTz = $_GET['tz'];
+                    setcookie('admin_timezone', $selectedTz, time() + (86400 * 365), "/");
+                } elseif (isset($_COOKIE['admin_timezone']) && in_array($_COOKIE['admin_timezone'], $allowedTimezones)) {
+                    $selectedTz = $_COOKIE['admin_timezone'];
+                }
+            ?>
+            <form id="tzForm" style="display:inline;">
+                <label for="timezoneSelect" style="font-weight:normal;">Display Timezone:</label>
+                <select id="timezoneSelect" name="tz" style="width:auto;display:inline;">
+                    <option value="UTC" <?php echo ($selectedTz === 'UTC') ? 'selected' : ''; ?>>UTC</option>
+                    <option value="America/New_York" <?php echo ($selectedTz === 'America/New_York') ? 'selected' : ''; ?>>US Eastern (EDT)</option>
+                    <option value="America/Chicago" <?php echo ($selectedTz === 'America/Chicago') ? 'selected' : ''; ?>>US Central (CDT)</option>
+                    <option value="America/Los_Angeles" <?php echo ($selectedTz === 'America/Los_Angeles') ? 'selected' : ''; ?>>US Pacific (PDT)</option>
+                </select>
+            </form>
+        </div>
+        <script>
+        // Move this script to header or keep here for timezone select
+        document.getElementById('timezoneSelect').addEventListener('change', function() {
+            var selectedTz = this.value;
+            // Set cookie for 1 year
+            document.cookie = "admin_timezone=" + encodeURIComponent(selectedTz) + ";path=/;max-age=" + (60*60*24*365);
+            // Reload with tz param
+            var currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('tz', selectedTz);
+            window.location.assign(currentUrl.toString());
+        });
+        </script>
         <div>
             <P>
                 <?php
