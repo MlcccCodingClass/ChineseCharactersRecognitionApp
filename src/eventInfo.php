@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (!$isTestChecked && !$isPracticeChecked) {
         $errormsg='Please check at least one activity type.';
     } else {
-        $activitySql = "SELECT StudentName, StudentID, ActivityID, g.GradeName, FinalScore, TimeSpent, isPractice FROM activities a join grade g on g.GradeId=a.level WHERE EventID = ?";
+        $activitySql = "SELECT StudentName, StudentID, ActivityID, g.GradeName, FinalScore, TimeSpent, StartTime, isPractice FROM activities a join grade g on g.GradeId=a.level WHERE EventID = ?";
 
         if ($isTestChecked && !$isPracticeChecked) {
             $activitySql .= " AND isPractice = 0";

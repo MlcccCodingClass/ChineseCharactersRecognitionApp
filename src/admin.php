@@ -6,6 +6,20 @@
     } else {     
         $includeNonActive = false;               
    }
+
+   // Determine selected timezone
+   // Determine selected timezone: priority is query param > cookie > UTC
+   $allowedTimezones = ['UTC', 'America/New_York', 'America/Chicago', 'America/Los_Angeles'];
+   $selectedTz = 'UTC';
+   if (isset($_GET['tz']) && in_array($_GET['tz'], $allowedTimezones)) {
+       $selectedTz = $_GET['tz'];
+       setcookie('admin_timezone', $selectedTz, time() + (86400 * 365), "/"); // 1 year
+   } elseif (isset($_COOKIE['admin_timezone']) && in_array($_COOKIE['admin_timezone'], $allowedTimezones)) {
+       $selectedTz = $_COOKIE['admin_timezone'];
+   }
+   $displayTimezone = new DateTimeZone($selectedTz);
+   $utcTimezone = new DateTimeZone('UTC');
+
 ?>
 <script>
 function limitTextLength(event, maxLength) {
@@ -79,17 +93,38 @@ $(function() {
             var check_fields = new Promise(function(resolve, reject) {
                     data['id'] = id;
                     var tr = $('tr[data-id="' + (id || '') + '"]');
+                    var isValid = true;
                     tr.find('td[contenteditable]').each(function() {
-                        data[$(this).attr('name')] = $(this).text()
-                        if (data[$(this).attr('name')] == '') {
+                        var fieldName = $(this).attr('name');
+                        var fieldValue = $(this).text().trim();
+                        data[fieldName] = fieldValue;
+
+                        if (fieldValue === '') {
                             showMessage("All fields are required.", false);
+                            isValid = false;
                             resolve(false);
-                            return false;
+                            return false; // Exit .each loop
                         }
-                    })
+
+                        // Basic date format validation
+                        if (fieldName === 'activeDate' || fieldName === 'expiredDate') {
+                            // Basic datetime format validation (YYYY-MM-DD HH:MM)
+                            if (!/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(fieldValue)) {
+                                showMessage("Invalid date/time format for " + fieldName + ". Please use YYYY-MM-DD HH:MM (24-hour format).", false);
+                                isValid = false;
+                                resolve(false);
+                                return false; // Exit .each loop
+                            }
+                        }
+                    });
+
+                    if (!isValid) return; // Stop if validation failed in the loop
 
                     // Add isPrivate value
                     data['isPrivate'] = tr.find('.isPrivate-checkbox').is(':checked') ? 1 : 0;
+
+                    // Add the display timezone used for editing
+                    data['displayTimezone'] = $('#timezoneSelect').val();
 
                     resolve(true);
                 })
@@ -152,6 +187,15 @@ function chkIncludeNonActive_Click(checkbox) {
     }
 }
 
+function changeTimezone(selectElement) {
+    var selectedTz = selectElement.value;
+    // Set cookie for 1 year
+    document.cookie = "admin_timezone=" + encodeURIComponent(selectedTz) + ";path=/;max-age=" + (60*60*24*365);
+    var currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('tz', selectedTz);
+    window.location.assign(currentUrl.toString());
+}
+
 </script>
 
 <style>
@@ -179,7 +223,8 @@ function chkIncludeNonActive_Click(checkbox) {
 <div class="container">
     <h2>Event List</h2>
     <p class="alert alert-danger"><b>Note to admin</b>:<br> Guest with EventKey can access active private event, you should only make one private event active for MLLCCC competition.
-    and you should keep one event pubic for students to practice. </p>
+    and you should keep one event pubic for students to practice. <br>
+    
     <div class="row">
 
         <div class="col-12">
@@ -192,7 +237,17 @@ function chkIncludeNonActive_Click(checkbox) {
                         echo '<input type="checkbox" id="chkIncludeNonActive" name="chkIncludeNonActive" onclick="chkIncludeNonActive_Click(this)">';  
                     }
                 ?>
-                <label for="chkIncludeNonActiveEvent">Include non-active events</label><br>
+                <label for="chkIncludeNonActiveEvent">Include non-active events</label>
+                <div style="float: right;">
+                    <label for="timezoneSelect">Display Timezone:</label>
+                    <select id="timezoneSelect" name="tz" onchange="changeTimezone(this)">
+                        <option value="UTC" <?php echo ($selectedTz === 'UTC') ? 'selected' : ''; ?>>UTC</option>
+                        <option value="America/New_York" <?php echo ($selectedTz === 'America/New_York') ? 'selected' : ''; ?>>US Eastern (EDT)</option>
+                        <option value="America/Chicago" <?php echo ($selectedTz === 'America/Chicago') ? 'selected' : ''; ?>>US Central (CDT)</option>
+                        <option value="America/Los_Angeles" <?php echo ($selectedTz === 'America/Los_Angeles') ? 'selected' : ''; ?>>US Pacific (PDT)</option>
+                    </select>
+                </div>
+                <br>
                 <input type="hidden" name="id" value="">
                 <table id="form-tbl">
                     <colgroup>
@@ -230,8 +285,16 @@ function chkIncludeNonActive_Click(checkbox) {
                         ?>
                         <td name="eventName" onkeydown="limitTextLength(event, 100)"><?php echo "<a href=eventInfo.php?event=".$eventID.">".$eventName."</a>" ?></td>
                         <td name="accessKey" onkeydown="limitTextLength(event, 100)"><?php echo $row['AccessKey'] ?></td>
-                        <td name="activeDate"><?php echo (new DateTime($row['ActiveDate']))->format('Y-m-d') ?></td>
-                        <td name="expiredDate"><?php echo (new DateTime($row['ExpiredDate']))->format('Y-m-d') ?></td>
+                        <td name="activeDate"><?php
+                            $activeDate = new DateTime($row['ActiveDate'], $utcTimezone);
+                            $activeDate->setTimezone($displayTimezone);
+                            echo $activeDate->format('Y-m-d H:i');
+                        ?></td>
+                        <td name="expiredDate"><?php
+                            $expiredDate = new DateTime($row['ExpiredDate'], $utcTimezone);
+                            $expiredDate->setTimezone($displayTimezone);
+                            echo $expiredDate->format('Y-m-d H:i');
+                        ?></td>
                         <td name="isPrivate" class="text-center">
                             <input type="checkbox" class="isPrivate-checkbox" <?php echo $row['isprivate'] ? 'checked' : ''; ?> 
                                   disabled=true>
