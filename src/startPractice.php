@@ -104,12 +104,12 @@ sessionStorage.setItem("wordlist", JSON.stringify(testList));
                 </div>
 
                 <div class="frame-botton">
-                    <div class="frame-botton2 col-sm-6">
+                    <div class="frame-botton2 col-sm-4 col-xs-12">
                         <div class="button button-tall" onclick="(()=>{window.location.assign('studentPractice.php')})()">
                             <div class="submit">Audio Practice</div>
                         </div>
                     </div>
-                     <div class="frame-botton2">
+                     <div class="frame-botton2 col-sm-4 col-xs-12">
                         <div class="button button-tall" onclick="(()=>{window.location.assign('studentgradedPractice.php')})()">
                             <div class="submit">Graded Practice</div>
                         </div>
