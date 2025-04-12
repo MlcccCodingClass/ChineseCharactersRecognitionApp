@@ -187,14 +187,7 @@ function chkIncludeNonActive_Click(checkbox) {
     }
 }
 
-function changeTimezone(selectElement) {
-    var selectedTz = selectElement.value;
-    // Set cookie for 1 year
-    document.cookie = "admin_timezone=" + encodeURIComponent(selectedTz) + ";path=/;max-age=" + (60*60*24*365);
-    var currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set('tz', selectedTz);
-    window.location.assign(currentUrl.toString());
-}
+// Timezone selection and change logic is now handled in _adminSessionHeader.php
 
 </script>
 
@@ -238,14 +231,6 @@ function changeTimezone(selectElement) {
                     }
                 ?>
                 <label for="chkIncludeNonActiveEvent">Include non-active events</label>
-                <div style="float: right;">
-                    <label for="timezoneSelect">Display Timezone:</label>
-                    <select id="timezoneSelect" name="tz" onchange="changeTimezone(this)">
-                        <option value="UTC" <?php echo ($selectedTz === 'UTC') ? 'selected' : ''; ?>>UTC</option>
-                        <option value="America/New_York" <?php echo ($selectedTz === 'America/New_York') ? 'selected' : ''; ?>>US Eastern (EDT)</option>
-                        <option value="America/Chicago" <?php echo ($selectedTz === 'America/Chicago') ? 'selected' : ''; ?>>US Central (CDT)</option>
-                        <option value="America/Los_Angeles" <?php echo ($selectedTz === 'America/Los_Angeles') ? 'selected' : ''; ?>>US Pacific (PDT)</option>
-                    </select>
                 </div>
                 <br>
                 <input type="hidden" name="id" value="">

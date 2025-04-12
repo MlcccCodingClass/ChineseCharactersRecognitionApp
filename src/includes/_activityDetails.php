@@ -84,7 +84,23 @@ $stats = $statsStmt->get_result()->fetch_object();
                         <td><?php echo $activity->FinalScore; ?></td>
                         <td><?php echo $activity->TimeSpent; ?></td>
                         <td><?php echo $activity->isPractice ? 'Practice' : 'Test'; ?></td>
-                        <td><?php echo date('Y-m-d H:i', strtotime($activity->StartTime)); ?></td>
+                        <td>
+                        <?php
+                            // Timezone logic: match _adminSessionHeader.php
+                            $allowedTimezones = ['UTC', 'America/New_York', 'America/Chicago', 'America/Los_Angeles'];
+                            $selectedTz = 'UTC';
+                            if (isset($_GET['tz']) && in_array($_GET['tz'], $allowedTimezones)) {
+                                $selectedTz = $_GET['tz'];
+                            } elseif (isset($_COOKIE['admin_timezone']) && in_array($_COOKIE['admin_timezone'], $allowedTimezones)) {
+                                $selectedTz = $_COOKIE['admin_timezone'];
+                            }
+                            $displayTz = new DateTimeZone($selectedTz);
+                            $utcTz = new DateTimeZone('UTC');
+                            $dt = new DateTime($activity->StartTime, $utcTz);
+                            $dt->setTimezone($displayTz);
+                            echo $dt->format('Y-m-d H:i');
+                        ?>
+                        </td>
                         <td>
                             <button class="btn btn-sm btn-info view-details" <?php echo $activity->FinalScore>0 ? '' : 'disabled'; ?>
                                     data-activity-id="<?php echo $activity->ActivityID; ?>">

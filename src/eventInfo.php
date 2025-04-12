@@ -97,7 +97,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <td><?php echo $row->TimeSpent; ?></td>
                         <td><?php echo $row->FinalScore; ?></td>
                         <td><?php echo $row->isPractice ? 'Practice' : 'Test'; ?></td>
-                        <td><?php echo date('Y-m-d H:i', strtotime($row->StartTime)); ?></td>
+                        <td>
+                        <?php
+                            // Timezone logic: match _adminSessionHeader.php
+                            $allowedTimezones = ['UTC', 'America/New_York', 'America/Chicago', 'America/Los_Angeles'];
+                            $selectedTz = 'UTC';
+                            if (isset($_GET['tz']) && in_array($_GET['tz'], $allowedTimezones)) {
+                                $selectedTz = $_GET['tz'];
+                            } elseif (isset($_COOKIE['admin_timezone']) && in_array($_COOKIE['admin_timezone'], $allowedTimezones)) {
+                                $selectedTz = $_COOKIE['admin_timezone'];
+                            }
+                            $displayTz = new DateTimeZone($selectedTz);
+                            $utcTz = new DateTimeZone('UTC');
+                            $dt = new DateTime($row->StartTime, $utcTz);
+                            $dt->setTimezone($displayTz);
+                            echo $dt->format('Y-m-d H:i');
+                        ?>
+                        </td>
                         <td>
                             <button class="btn btn-sm btn-info view-details" <?php echo $row->FinalScore>0 ? '' : 'disabled'; ?>
                                     data-activity-id="<?php echo $row->ActivityID; ?>">
