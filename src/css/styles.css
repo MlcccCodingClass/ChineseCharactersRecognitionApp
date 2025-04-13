@@ -769,7 +769,35 @@ li a:hover {
     margin-right: auto
     
   }
+.button-tall {
+  height: 70px;
+  border-radius: 15px;
+  
+  width: 75%px;
+  margin:10px;
+}
+.submit {
+  color: var(--head-fontcolor, #ffffff);
+  text-align: center;
+  font: 25px "Work Sans", sans-serif;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.frame-button2 {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  flex-shrink: 0;
+  height: 75px;
+  position: relative;
+  margin: 1vw;
 
+}
 }
 
 @media only screen and (max-width: 500px) {
@@ -787,12 +815,7 @@ li a:hover {
     margin-top: -35px;
     margin-left: 25px;
 }
-.button-tall {
-  height: 80px;
-  border-radius: 20px;
-  font-size: 30px;
-  width: 150px;
-}
+
 .show {
   display: block!important;
   margin-left: 25px;

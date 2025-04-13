@@ -102,23 +102,27 @@ $timeLimit = isset($_COOKIE['timeLimit']) ? sanitizeHTML($_COOKIE['timeLimit']) 
 
         let correctAnswer = testList[current].word;
         let resultElement = document.getElementById('result');
+        testList[current].answer = recognizedText; // Store the recognized text in the testList
 
         // Check if the recognized text matches the correct answer
         //if (recognizedText.trim() === correctAnswer) {
         if (recognizedText.includes(correctAnswer)) {
             resultElement.innerHTML = '<h2 class="form-title" style="color: #18b740de;">Correct!</h2>';
             testList[current].result = 1; // Full score for correct answer
+            
             nextItem(true);
-        } else if (recognizedText.trim().startsWith(correctAnswer) || recognizedText.trim().endsWith(correctAnswer)) {
-            // If the pinyin matches but the tone is wrong, call the grade_audio API
+        }else{ 
+            //if (recognizedText.trim().startsWith(correctAnswer) || recognizedText.trim().endsWith(correctAnswer)) 
+            
+            //call the grade_audio API to see if the pinyin matches but the tone is wrong, 
             fetch('api/grade_audio.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    recognizedText: recognizedText,
-                    correctAnswer: correctAnswer
+                    expect: correctAnswer,
+                    input: recognizedText
                 })
             })
             .then(response => response.json())
@@ -142,20 +146,18 @@ $timeLimit = isset($_COOKIE['timeLimit']) ? sanitizeHTML($_COOKIE['timeLimit']) 
                 // Update the testList with the result
                 testList[current].result = score;
                 // Save the updated testList to session storage
-                sessionStorage.setItem("wordlist", JSON.stringify(testList));
+               // sessionStorage.setItem("wordlist", JSON.stringify(testList));
 
                 // Move to the next item
                 nextItem(score > 0.5);
             })
             .catch(error => {
                 console.error("Error calling API:", error);
+                resultElement.innerHTML = '<h2 class="form-title" style="color: #ba4040;">Incorrect!</h2>';
+                testList[current].result = 0; // No score for incorrect answer
+                nextItem(false);
             });
-        } else {
-            // If the word is completely wrong, grade it as incorrect
-            resultElement.innerHTML = '<h2 class="form-title" style="color: #ba4040;">Incorrect!</h2>';
-            testList[current].result = 0; // No score for incorrect answer
-            nextItem(false);
-        }
+        } 
 
     }
 
@@ -261,12 +263,12 @@ $timeLimit = isset($_COOKIE['timeLimit']) ? sanitizeHTML($_COOKIE['timeLimit']) 
                     </button>
                 </div>
             </div>
-            <div class="label wrap text-center">
+            <div class="label wrap text-center ">
                 <div class="test-word" id="boxTestword">
                     测试
                 </div>
             </div>
-            <div id="text-generator" style="display: none;"></div> <!-- Add this element -->
+            <div id="text-generator" class="alert text-center alert-info" ></div> <!-- Add this element -->
         </div>
         <div class="col-sm-2 side-bar">
             <div id="next-btn" class="label wrap">></div>

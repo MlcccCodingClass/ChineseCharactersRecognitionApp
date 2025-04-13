@@ -103,12 +103,12 @@ require_once '_incFunctions.php';
 
                     </div>
                     <div class="row">
-                        <div class="frame-button2 col-xs-6">
+                        <div class="frame-button2 col-sm-6 col-xs-12">
                             <div class="button button-tall button-wrong" onclick="nextItem(false)">
                                 <div class="submit">Wrong</div>
                             </div>
                         </div>
-                        <div class="frame-button2 col-xs-6">
+                        <div class="frame-button2 col-sm-6 col-xs-12">
                             <div class="button button-tall button-green" onclick="nextItem(true)">
                                 <div class="submit">Correct</div>
                             </div>

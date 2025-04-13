@@ -94,7 +94,7 @@ sessionStorage.setItem("wordlist", JSON.stringify(testList));
                 </div>
 
                 <div class="frame-botton">
-                    <div class="frame-botton2">
+                    <div class="frame-botton2 col-sm-12">
                         <div class="button button-tall" onclick="(()=>{window.location.assign('testBoard.php')})()">
                             <div class="submit">Start</div>
                         </div>
