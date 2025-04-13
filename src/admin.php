@@ -41,6 +41,7 @@ function showMessage(message, isSuccess = true) {
     $('#messageModal').modal('show');
     
     if (isSuccess) {
+        $('#modalMessage').css('color', 'green');
         $('#messageModal').on('hidden.bs.modal', function () {
             location.reload();
         });
@@ -63,28 +64,36 @@ $(function() {
             tr.append('<td contenteditable name="activeDate"></td>')
             tr.append('<td contenteditable name="expiredDate"></td>')
             tr.append('<td name="isPrivate" class="text-center"><input type="checkbox" class="isPrivate-checkbox"></td>')
-            tr.append('<td class="text-center"><button class="btn btn-sm btn-primary btn-flat rounded-0 px-2 py-0">Save</button><button class="btn btn-sm btn-dark btn-flat rounded-0 px-2 py-0" onclick="cancel_button($(this))" type="button">Cancel</button></td>')
+            tr.append('<td class="text-center"><button class="btn btn-sm btn-primary btn-flat rounded-0 px-2 py-0" type="submit">Save</button><button class="btn btn-sm btn-dark btn-flat rounded-0 px-2 py-0" onclick="cancel_button($(this))" type="button">Cancel</button></td>')
             $('#form-tbl').append(tr)
             tr.find('[name="eventName"]').focus()
         })
 
         // Edit Row
         $('.edit_data').click(function() {
-            var id = $(this).closest('tr').attr('data-id')
-            $('input[name="id"]').val(id)
-            var count_column = $(this).closest('tr').find('td').length
-            $(this).closest('tr').find('td').each(function() {
+            var $tr = $(this).closest('tr');
+            var id = $tr.attr('data-id');
+            $('input[name="id"]').val(id);
+            var count_column = $tr.find('td').length;
+        
+            // Replace eventName cell's HTML (which may contain <a>) with just the plain text
+            var $eventNameCell = $tr.find('[name="eventName"]');
+            var eventNameText = $eventNameCell.text();
+            $eventNameCell.html(eventNameText);
+        
+            $tr.find('td').each(function() {
                 if ($(this).index() != (count_column - 1))
-                    $(this).attr('contenteditable', true)
-            })
-            $(this).closest('tr').find('.isPrivate-checkbox').prop('disabled', false)
-            $(this).closest('tr').find('[name="eventName"]').focus()
-            $(this).closest('tr').find('.editable').show('fast')
-            $(this).closest('tr').find('.noneditable').hide('fast')
-        })
+                    $(this).attr('contenteditable', true);
+            });
+            $tr.find('.isPrivate-checkbox').prop('disabled', false);
+            $tr.find('[name="eventName"]').focus();
+            $tr.find('.editable').show('fast');
+            $tr.find('.noneditable').hide('fast');
+        });
 
 
         $('#form-data').submit(function(e) {
+            //alert('submit!');
             e.preventDefault();
             var id = $('input[name="id"]').val();
            
@@ -97,10 +106,11 @@ $(function() {
                     tr.find('td[contenteditable]').each(function() {
                         var fieldName = $(this).attr('name');
                         var fieldValue = $(this).text().trim();
+
                         data[fieldName] = fieldValue;
 
-                        if (fieldValue === '') {
-                            showMessage("All fields are required.", false);
+                        if (fieldValue === '' && fieldName !== 'isPrivate') {
+                            showMessage("All fields are required:"+fieldName, false);
                             isValid = false;
                             resolve(false);
                             return false; // Exit .each loop
@@ -119,9 +129,11 @@ $(function() {
                     });
 
                     if (!isValid) return; // Stop if validation failed in the loop
+// Always enable the isPrivate checkbox before reading its value
+tr.find('.isPrivate-checkbox').prop('disabled', false);
+// Add isPrivate value
+data['isPrivate'] = tr.find('.isPrivate-checkbox').is(':checked') ? 1 : 0;
 
-                    // Add isPrivate value
-                    data['isPrivate'] = tr.find('.isPrivate-checkbox').is(':checked') ? 1 : 0;
 
                     // Add the display timezone used for editing
                     data['displayTimezone'] = $('#timezoneSelect').val();
@@ -223,6 +235,7 @@ function chkIncludeNonActive_Click(checkbox) {
         <div class="col-12">
             <!-- Table Form start -->
             <form action="" id="form-data">
+                <div>
                 <?php 
                     if ($includeNonActive) {
                         echo '<input type="checkbox" id="chkIncludeNonActive" name="chkIncludeNonActive" checked onclick="chkIncludeNonActive_Click(this)">';                 
@@ -230,7 +243,7 @@ function chkIncludeNonActive_Click(checkbox) {
                         echo '<input type="checkbox" id="chkIncludeNonActive" name="chkIncludeNonActive" onclick="chkIncludeNonActive_Click(this)">';  
                     }
                 ?>
-                <label for="chkIncludeNonActiveEvent">Include non-active events</label>
+                <label for="chkIncludeNonActive">Include non-active events</label>
                 </div>
                 <br>
                 <input type="hidden" name="id" value="">
@@ -256,11 +269,12 @@ function chkIncludeNonActive_Click(checkbox) {
                     <tbody>
                     <?php 
                     if ($includeNonActive) {
-                        $query = $conn->query("SELECT * FROM `event` ORDER by ExpiredDate DESC limit 50");                      
+                        $sql="SELECT * FROM `event` ORDER by ExpiredDate DESC limit 50";
                     } else {                
-                        $query = $conn->query("SELECT * FROM `event` WHERE ExpiredDate> CURRENT_DATE() and ActiveDate<=CURRENT_DATE() ORDER by ExpiredDate DESC");                               
+                        $sql = ("SELECT * FROM `event` WHERE ExpiredDate> CURRENT_DATE() and ActiveDate<=CURRENT_DATE() ORDER by ExpiredDate DESC");                               
                     }
-                  
+                    $query = $conn->query($sql);                      
+
                     while($row = $query->fetch_assoc()):
                     ?>
                     <tr data-id='<?php echo $row['ID'] ?>'>
@@ -294,7 +308,7 @@ function chkIncludeNonActive_Click(checkbox) {
                     </tbody>
                 </table>
             </form>
-            <!-- Table Form end -->
+        <!-- Table Form end -->
         </div>
         <div class="w-100 d-flex pposition-relative justify-content-center">
             <button class="btn btn-flat btn-primary" id="add_event" type="button">Add New Event</button>
