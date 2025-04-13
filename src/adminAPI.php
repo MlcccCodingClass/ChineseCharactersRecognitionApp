@@ -4,7 +4,9 @@ require_once 'htmlpurifier-4.15.0-lite/library/HTMLPurifier.auto.php';
 require_once '_incFunctions.php';
 require "connect.php";
 
+header('Content-Type: application/json');
 $message = "";
+$stmt = null;
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try{
         $id = isset($_POST['id']) ? $_POST['id'] : '';
@@ -55,14 +57,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $expiredDateObj->setTimezone($utcTimezone);
         $expiredDateUTC = $expiredDateObj->format('Y-m-d H:i:s'); // Format for DB
 
-        if(empty($id)){   
+        if(empty($id)){
             // Insert event
-            $sql = "INSERT INTO `event` (EventName, AccessKey, ActiveDate, ExpiredDate, isPrivate) VALUES (?, ?, ?, ?, ?);";         
+            $sql = "INSERT INTO `event` (EventName, AccessKey, ActiveDate, ExpiredDate, isPrivate) VALUES (?, ?, ?, ?, ?);";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("ssssi", $eventName, $accessKey, $activeDateUTC, $expiredDateUTC, $isPrivate);
         }else{
             // Update event
-            $sql = "UPDATE `event` SET EventName = ?, AccessKey = ?, ActiveDate = ?, ExpiredDate = ?, isPrivate = ? WHERE ID = ?";        
+            $sql = "UPDATE `event` SET EventName = ?, AccessKey = ?, ActiveDate = ?, ExpiredDate = ?, isPrivate = ? WHERE ID = ?";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("ssssii", $eventName, $accessKey, $activeDateUTC, $expiredDateUTC, $isPrivate, $id);
         }
@@ -70,9 +72,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $message = 'The event is saved successfully!';
     }
     catch (Exception $e) {
-        $message =  'There is an error occured while saving the event.'.$e;
+        $message =  'There is an error occured while saving the event.'.$e->getMessage();
     }
-    $stmt->close();
+    if ($stmt && is_object($stmt)) {
+        $stmt->close();
+    }
 }
 else
 {
