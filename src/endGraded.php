@@ -67,7 +67,9 @@
             if (wrong_list != "") {
                 wrong_list += ", ";
             }
-            wrong_list += item.word + " (" + item.pinyin + ")";
+            let answer = item.answer !== undefined ? item.answer : "-";
+            let result = item.result !== undefined ? item.result : "-";
+            wrong_list += item.word + " (" + answer + "," + result + ")";
         }
     });
     document.getElementById('div-wrong-words').innerText = wrong_list;

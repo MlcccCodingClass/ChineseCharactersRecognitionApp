@@ -1,6 +1,13 @@
 <?php
-
+require "incKeys.php";
 $curl = curl_init();
+
+error_log("grade_audio.php: Received input: " . file_get_contents("php://input"));
+$rawInput = file_get_contents("php://input");
+$data = json_decode($rawInput, true);
+$expect = isset($data['expect']) ? $data['expect'] : '';
+$input = isset($data['input']) ? $data['input'] : '';
+error_log("grade_audio.php: Parsed expect = '$expect', input = '$input'");
 
 curl_setopt_array($curl, [
   CURLOPT_URL => "https://api.groq.com/openai/v1/chat/completions",
@@ -19,23 +26,55 @@ curl_setopt_array($curl, [
         ],
         [
                 'role' => 'user',
-                'content' => ' expected: `明天`, input:`民天` '
+                'content' => " expected: `$expect`, input:`$input` "
         ]
     ]
   ]),
   CURLOPT_HTTPHEADER => [
-    "authorization:", // get from https://console.groq.com/keys
-    "content-type: application/json"
+    "authorization:Bearer $groq_api_key", // get from https://console.groq.com/keys
+    "content-type:application/json"
   ],
 ]);
+error_log("grade_audio.php: Sending request to LLM API...");
 
 $response = curl_exec($curl);
 $err = curl_error($curl);
+error_log("grade_audio.php: Received response from LLM API: " . substr($response, 0, 500));
 
 curl_close($curl);
 
 if ($err) {
-  echo "cURL Error #:" . $err;
+    error_log("grade_audio.php: cURL Error: " . $err);
+    echo "cURL Error #:" . $err;
 } else {
+    $data = json_decode($response, true);
+    $content = '';
+    if (isset($data['choices'][0]['message']['content'])) {
+        $content = $data['choices'][0]['message']['content'];
+        error_log("grade_audio.php: LLM message content: " . $content);
+        // Extract JSON-like substring using regex
+        if (preg_match("/\{[^}]+\}/", $content, $matches)) {
+            $jsonStr = $matches[0];
+            error_log("grade_audio.php: Extracted JSON string: " . $jsonStr);
+            // Convert single quotes to double quotes for valid JSON
+            $jsonStr = str_replace("'", '"', $jsonStr);
+            $jsonObj = json_decode($jsonStr, true);
+            if ($jsonObj !== null) {
+                error_log("grade_audio.php: Successfully parsed JSON object: " . json_encode($jsonObj));
+                header('Content-Type: application/json');
+                echo json_encode($jsonObj);
+                exit;
+            } else {
+                error_log("grade_audio.php: Failed to decode JSON string after conversion.");
+            }
+        } else {
+            error_log("grade_audio.php: No JSON object found in LLM message content.");
+        }
+    } else {
+        error_log("grade_audio.php: No message content found in LLM response.");
+    }
+    // If extraction fails, return error
+    http_response_code(500);
+    echo json_encode(['error' => 'Could not extract JSON from LLM response', 'raw_content' => $content]);
   echo $response;
 }
