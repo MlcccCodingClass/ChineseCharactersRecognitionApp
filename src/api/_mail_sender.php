@@ -1,5 +1,52 @@
 <?php
 
+
+
+require("vendor/autoload.php");
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+function SendRecoverPwd2($email,$password){
+    require_once("incKeys.php");
+    $phpmailer = new PHPMailer(true);
+    try {
+        // Configure SMTP
+        $phpmailer->isSMTP();
+        $phpmailer->SMTPAuth = true;
+        $phpmailer->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+      
+        // ENV Credentials
+        $phpmailer->Host =  $mail_host;
+        $phpmailer->Port = $mail_port;
+        $phpmailer->Username = $mail_username;
+        $phpmailer->Password = $mail_password;
+        $mailertogo_domain = "mlccc.org"; // Change to your domain name
+      
+        // Mail Headers
+        $phpmailer->setFrom("admin@{$mailertogo_domain}", "MLCCC CCR Support");
+        // Change to recipient email. Make sure to use a real email address in your tests to avoid hard bounces and protect your reputation as a sender.
+        $phpmailer->addAddress($email, "Recipient");
+      
+        // Message
+        $phpmailer->isHTML(true);
+        $phpmailer->Subject = "Your Password for MLCCC Chinese Characters Recognition App";
+       
+        $phpmailer->Body = "<p>Thank you for using <a href='https://mlccc.herokuapp.com/CCR'>MLCCC Chinese Characters Recognition App</a></p><br><p>Your password is <b>$password</b>.</p><br><br>- MLCCC CCR Support team";
+        $phpmailer->AltBody = "Thank you for using MLCCC Chinese Characters Recognition App. Your password is $password. - MLCCC CCR Support team";
+      
+        // Send the Email
+        $phpmailer->send();
+        echo "Message has been sent";
+        error_log("Password recovery email sent successfully to: " . $email);
+        return true;
+      } catch (Exception $e) {
+        echo "Message could not be sent. Mailer Error: {$phpmailer->ErrorInfo}";
+        error_log("PHPMailer error for {$email}: " . $e->getMessage());
+        throw new Exception("Send email to $email failed");
+      }
+
+}
+
 //use mail send api to send recover password email.  https://www.mailersend.com/
 function SendRecoverPwd($email,$password){
     require_once("incKeys.php");
@@ -16,7 +63,7 @@ function SendRecoverPwd($email,$password){
       CURLOPT_CUSTOMREQUEST => "POST",
       CURLOPT_POSTFIELDS => json_encode([
         'from' => [
-            'email' => 'mlccc_ccr_recoverpassword_noreplay@trial-ynrw7gy7xdkg2k8e.mlsender.net'
+            'email' => 'mlccc_ccr_recoverpassword_noreplay@test-2p0347zz8kylzdrn.mlsender.net'
         ],
         'to' => [
             [
@@ -48,6 +95,7 @@ function SendRecoverPwd($email,$password){
        return true;
     }
 }
+
 
 /**
  * 

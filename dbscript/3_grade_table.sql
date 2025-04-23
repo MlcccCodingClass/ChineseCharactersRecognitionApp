@@ -32,6 +32,12 @@ INSERT INTO `grade` (`GradeId`, `GradeName`,  `NumberOfWords`,`TimeLimit`, `Crea
     (18, 'CSL-3', 20, 10, current_timestamp(), current_timestamp()),
     (19, 'CSL-4', 20, 10, current_timestamp(), current_timestamp()),
     (20, 'CSL-5/6', 20, 10, current_timestamp(), current_timestamp());
+  
 
 
-
+INSERT INTO `grade` (`GradeId`, `GradeName`,  `NumberOfWords`,`TimeLimit`, `CreateDate`, `lastModified`)
+    VALUES (21, 'G9-MLP', 50, 6, current_timestamp(), current_timestamp());
+INSERT INTO `grade` (`GradeId`, `GradeName`,  `NumberOfWords`,`TimeLimit`, `CreateDate`, `lastModified`)
+    VALUES (22, 'G7-MZHY', 50, 6, current_timestamp(), current_timestamp()),
+    (23, 'G8-MZHY', 50, 6, current_timestamp(), current_timestamp()),
+     (24, 'G8-MZHY', 50, 6, current_timestamp(), current_timestamp()),
