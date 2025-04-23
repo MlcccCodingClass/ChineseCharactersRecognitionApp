@@ -53,7 +53,7 @@ try {
 
     $user = $result->fetch_assoc();
 
-    SendRecoverPwd($email,$user['Password']);
+    SendRecoverPwd2($email,$user['Password']);
 
     error_log("Password recovery email sent successfully to: " . $email);
         
