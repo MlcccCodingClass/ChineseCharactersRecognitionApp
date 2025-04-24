@@ -2,7 +2,7 @@
 <?php require_once '_incFunctions.php';
 if (!$_SESSION["IsAdmin"]) {
     $options = "<option  value=''>Select Grade</option>";
-    $sql = "SELECT GradeId, GradeName FROM grade";
+    $sql = "SELECT GradeId, GradeName FROM grade order by gradeName ASC";
     $result = $conn->query($sql);
     $grade=isset($_SESSION["grade"]) ? sanitizeHTML($_SESSION["grade"]) : "";
     while ($row = $result->fetch_assoc()) {

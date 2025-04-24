@@ -70,7 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div>
                             <?php
                             $options = "<option  value=''>Select Grade</option>";
-                            $sql = "SELECT GradeId, GradeName FROM grade";
+                            $sql = "SELECT GradeId, GradeName FROM grade order by gradeName ASC";
                             $result = $conn->query($sql);
                             while ($row = $result->fetch_assoc()) {
                                 $optionValue = $row["GradeId"];

@@ -5,7 +5,7 @@ require "../connect.php";
 
 header('Content-Type: application/json');
 
-$query = $conn->query("SELECT GradeID, GradeName FROM grade ORDER BY GradeID");
+$query = $conn->query("SELECT GradeID, GradeName FROM grade  order by gradeName ASC");
 $grades = [];
 
 while ($row = $query->fetch_assoc()) {
