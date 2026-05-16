@@ -201,6 +201,38 @@ function chkIncludeNonActive_Click(checkbox) {
 
 // Timezone selection and change logic is now handled in _adminSessionHeader.php
 
+// Batch delete old records functionality
+function batchDeleteRecords() {
+    var months = $('#monthsToDelete').val();
+    if (!months) {
+        showMessage("Please select the number of months", false);
+        return;
+    }
+    
+    if (confirm('Are you sure you want to delete all records older than ' + months + ' month(s)?\n\nThis action cannot be undone.')) {
+        $.ajax({
+            url: "adminAPI.php",
+            method: 'POST',
+            data: {
+                action: 'batchDeleteRecords',
+                months: months
+            },
+            dataType: 'json',
+            success: function(res) {
+                if (res.success) {
+                    showMessage('Successfully deleted ' + res.deletedCount + ' record(s)!', true);
+                } else {
+                    showMessage('Error: ' + res.message, false);
+                }
+            },
+            error: function (err) {
+                showMessage('An error occurred while deleting records!', false);
+                console.log(err);
+            }
+        });
+    }
+}
+
 </script>
 
 <style>
@@ -310,8 +342,38 @@ function chkIncludeNonActive_Click(checkbox) {
             </form>
         <!-- Table Form end -->
         </div>
-        <div class="w-100 d-flex pposition-relative justify-content-center">
+        <div class="w-100 d-flex pposition-relative justify-content-center mt-4">
             <button class="btn btn-flat btn-primary" id="add_event" type="button">Add New Event</button>
+        </div>
+    </div>
+
+    <!-- Batch Delete Old Records Section -->
+    <div class="row mt-5 border-top pt-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-header bg-danger text-white">
+                    <h5>Database Maintenance - Delete Old Records</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Delete activity records that are older than a specified number of months to reduce database size.</p>
+                    <div class="form-group">
+                        <label for="monthsToDelete">Select records older than:</label>
+                        <select id="monthsToDelete" class="form-control" style="max-width: 250px;">
+                            <option value="">-- Choose months --</option>
+                            <option value="1">1 month</option>
+                            <option value="2">2 months</option>
+                            <option value="3">3 months</option>
+                            <option value="4">4 months</option>
+                            <option value="5">5 months</option>
+                            <option value="6">6 months</option>
+                        </select>
+                    </div>
+                    <div class="alert alert-warning" role="alert">
+                        <strong>Warning:</strong> This will permanently delete all records with activity start time older than the selected period. This action cannot be undone!
+                    </div>
+                    <button class="btn btn-danger" onclick="batchDeleteRecords()" type="button">Delete Old Records</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>

@@ -1,0 +1,2 @@
+select StudentName ,GradeName ,FinalScore ,TimeSpent ,JudgeName ,TimeSpent ,StartTime,CompletedTime  from activities join grade on GradeId = `Level`   where  EventID =5 and isPractice =0 and FinalScore >0
+ order by grade.GradeName asc ,activities.FinalScore desc

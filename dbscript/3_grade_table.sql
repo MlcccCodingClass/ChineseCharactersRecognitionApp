@@ -41,3 +41,6 @@ INSERT INTO `grade` (`GradeId`, `GradeName`,  `NumberOfWords`,`TimeLimit`, `Crea
     VALUES (22, 'G7-MZHY', 50, 6, current_timestamp(), current_timestamp()),
     (23, 'G8-MZHY', 50, 6, current_timestamp(), current_timestamp()),
      (24, 'G8-MZHY', 50, 6, current_timestamp(), current_timestamp()),
+	 
+INSERT INTO `grade` (`GradeId`, `GradeName`,  `NumberOfWords`,`TimeLimit`, `CreateDate`, `lastModified`)
+    VALUES (25, 'AP-9/10', 50, 6, current_timestamp(), current_timestamp());

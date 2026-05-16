@@ -9,6 +9,44 @@ $message = "";
 $stmt = null;
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try{
+        $action = isset($_POST['action']) ? $_POST['action'] : '';
+        
+        // Handle batch delete records
+        if ($action === 'batchDeleteRecords') {
+            $months = isset($_POST['months']) ? intval($_POST['months']) : 0;
+            
+            if ($months <= 0 || $months > 6) {
+                throw new Exception("Invalid number of months. Please select 1-6 months.");
+            }
+            
+            // Calculate the date threshold (records older than this date will be deleted)
+            $cutoffDate = date('Y-m-d H:i:s', strtotime("-$months months"));
+            
+            // Delete records where the associated activity's StartTime is older than the cutoff date
+            $deleteSql = "DELETE r FROM `records` r 
+                         INNER JOIN `activities` a ON r.ActivityID = a.ActivityID 
+                         WHERE a.StartTime < ?";
+            
+            $stmt = $conn->prepare($deleteSql);
+            if (!$stmt) {
+                throw new Exception("Prepare failed: " . $conn->error);
+            }
+            
+            $stmt->bind_param("s", $cutoffDate);
+            $stmt->execute();
+            
+            $deletedCount = $stmt->affected_rows;
+            
+            $response = array(
+                'success' => true,
+                'deletedCount' => $deletedCount,
+                'message' => 'Successfully deleted ' . $deletedCount . ' record(s)'
+            );
+            echo json_encode($response);
+            exit;
+        }
+        
+        // Handle original event operations
         $id = isset($_POST['id']) ? $_POST['id'] : '';
         $eventName = isset($_POST['eventName']) ? $_POST['eventName'] : '';
         $accessKey = isset($_POST['accessKey']) ? $_POST['accessKey'] : '';
